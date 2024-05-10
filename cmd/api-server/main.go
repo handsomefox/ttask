@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/handsomefox/ttask/api/handler"
+	"github.com/handsomefox/ttask/api/middleware"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -20,7 +22,7 @@ func main() {
 	r := httprouter.New()
 
 	// 1. Create a REST endpoint called calculate
-	r.POST("/calculate", CalculateMiddleware(HandleCalculate))
+	r.POST("/calculate", middleware.Calculate(handler.Calculate))
 
 	server := &http.Server{
 		Addr:              ":8989", // available at port 8989 so we can access it http://localhost:8989/calculate

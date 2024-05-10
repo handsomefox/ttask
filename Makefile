@@ -5,5 +5,5 @@ test:
 .PHONY:test
 
 run:
-	go run .
+	go run ./cmd/api-server/main.go
 .PHONY:run

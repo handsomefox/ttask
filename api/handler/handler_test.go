@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"bytes"
@@ -10,12 +10,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/handsomefox/ttask/api/middleware"
+	"github.com/handsomefox/ttask/pkg/types"
 	"github.com/julienschmidt/httprouter"
 )
 
 func Test_CalculateHandler(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		h := CalculateMiddleware(HandleCalculate)
+		h := middleware.Calculate(Calculate)
 		h(w, r, httprouter.Params{})
 	}
 
@@ -27,32 +29,32 @@ func Test_CalculateHandler(t *testing.T) {
 	}{
 		{
 			name:         "A is nil",
-			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", CalculateRequest{A: nil, B: new(int)}),
+			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", types.CalculateRequest{A: nil, B: new(int)}),
 			wantResponse: string(mustMarshalJSON(t, map[string]string{"error": "Incorrect input"})) + "\n",
 			wantStatus:   http.StatusBadRequest,
 		},
 		{
 			name:         "B is nil",
-			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", CalculateRequest{A: new(int), B: nil}),
+			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", types.CalculateRequest{A: new(int), B: nil}),
 			wantResponse: string(mustMarshalJSON(t, map[string]string{"error": "Incorrect input"})) + "\n",
 			wantStatus:   http.StatusBadRequest,
 		},
 		{
 			name:         "A is -1",
-			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", CalculateRequest{A: intPtrValue(t, -1), B: new(int)}),
+			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", types.CalculateRequest{A: intPtrValue(t, -1), B: new(int)}),
 			wantResponse: string(mustMarshalJSON(t, map[string]string{"error": "Incorrect input"})) + "\n",
 			wantStatus:   http.StatusBadRequest,
 		},
 		{
 			name:         "B is -1",
-			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", CalculateRequest{A: new(int), B: intPtrValue(t, -1)}),
+			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", types.CalculateRequest{A: new(int), B: intPtrValue(t, -1)}),
 			wantResponse: string(mustMarshalJSON(t, map[string]string{"error": "Incorrect input"})) + "\n",
 			wantStatus:   http.StatusBadRequest,
 		},
 		{
 			name:         "A 2, B 3",
-			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", CalculateRequest{A: intPtrValue(t, 2), B: intPtrValue(t, 3)}),
-			wantResponse: string(mustMarshalJSON(t, CalculateResponse{A: 2, B: 6})) + "\n",
+			request:      mustCreateRequest(t, http.MethodPost, "localhost:8989/calculate", types.CalculateRequest{A: intPtrValue(t, 2), B: intPtrValue(t, 3)}),
+			wantResponse: string(mustMarshalJSON(t, types.CalculateResponse{A: 2, B: 6})) + "\n",
 			wantStatus:   http.StatusOK,
 		},
 	}

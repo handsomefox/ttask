@@ -1,37 +1,27 @@
-package main
+package handler
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"sync"
 
+	"github.com/handsomefox/ttask/api/middleware"
+	"github.com/handsomefox/ttask/internal/shared"
+	"github.com/handsomefox/ttask/pkg/types"
 	"github.com/julienschmidt/httprouter"
 )
 
-// Calculate endpoint has to take JSON with following structure: {"a":int,"b":int}
-type CalculateRequest struct {
-	A *int `json:"a"`
-	B *int `json:"b"`
-}
-
-// Calculate will return JSON with the a! and b!
-type CalculateResponse struct {
-	A uint64 `json:"a"`
-	B uint64 `json:"b"`
-}
-
-// HandleCalculate expects the context to contain the value of the request. It does not read the request body.
-func HandleCalculate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	body, ok := r.Context().Value(CalculateRequestKey).(CalculateRequest)
+// Calculate expects the context to contain the value of the request. It does not read the request body.
+func Calculate(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	body, ok := r.Context().Value(middleware.CalculateRequestKey).(types.CalculateRequest)
 	if !ok {
 		slog.Warn("HandleCalculate must not be called before or without the CalculateMiddleware")
-		WriteIncorrectInputError(w)
+		shared.WriteIncorrectInputError(w)
 		return
 	}
 
 	a, b := concurrentFactorial(uint64(*body.A), uint64(*body.B))
-	if err := writeJSON(w, CalculateResponse{A: a, B: b}, http.StatusOK); err != nil {
+	if err := shared.WriteJSON(w, types.CalculateResponse{A: a, B: b}, http.StatusOK); err != nil {
 		slog.Error("Error when writing json to connection", "err", err)
 	}
 }
@@ -67,10 +57,4 @@ func factorial(n uint64) (result uint64) {
 		return result
 	}
 	return 1
-}
-
-func writeJSON(w http.ResponseWriter, v any, status int) error {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.WriteHeader(status)
-	return json.NewEncoder(w).Encode(v)
 }

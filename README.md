@@ -11,7 +11,7 @@ make run
 or
 
 ```bash
-go run .
+go run ./cmd/api-server/main.go
 ```
 
 ## How to run tests

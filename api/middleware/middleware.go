@@ -1,4 +1,4 @@
-package main
+package middleware
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/handsomefox/ttask/internal/shared"
+	"github.com/handsomefox/ttask/pkg/types"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -19,27 +21,20 @@ const (
 
 var ErrCalculateInvalidInput = errors.New("middleware: invalid input in calculate")
 
-// in case of failure return JSON { "error":"Incorrect input"} with error status code 400 Bad Request
-func WriteIncorrectInputError(w http.ResponseWriter) {
-	if err := writeJSON(w, map[string]string{"error": "Incorrect input"}, http.StatusBadRequest); err != nil {
-		slog.Error("Error when writing incorrect input to stream", "err", err)
-	}
-}
-
-// CalculateMiddleware validates the request and sets the context.Value(CalculateRequestKey) to the CalculateRequest struct.
-func CalculateMiddleware(next httprouter.Handle) httprouter.Handle {
+// Calculate validates the request and sets the context.Value(CalculateRequestKey) to the CalculateRequest struct.
+func Calculate(next httprouter.Handle) httprouter.Handle {
 	// Create middleware
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		var body CalculateRequest
+		var body types.CalculateRequest
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			slog.Error("CalculateMiddleware#Decode", "err", err)
-			WriteIncorrectInputError(w)
+			shared.WriteIncorrectInputError(w)
 			return
 		}
 
 		if err := validateCalculateRequest(body); err != nil {
 			slog.Info("CalculateMiddleware#validateCalculateRequest", "err", err)
-			WriteIncorrectInputError(w)
+			shared.WriteIncorrectInputError(w)
 			return
 		}
 
@@ -52,7 +47,7 @@ func CalculateMiddleware(next httprouter.Handle) httprouter.Handle {
 	}
 }
 
-func validateCalculateRequest(body CalculateRequest) error {
+func validateCalculateRequest(body types.CalculateRequest) error {
 	// which will check if a and b exists
 	if body.A == nil {
 		return fmt.Errorf("%w: A is nil", ErrCalculateInvalidInput)
